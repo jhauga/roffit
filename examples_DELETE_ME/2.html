@@ -1,0 +1,130 @@
+
+<!--_END_OUT-->
+  </div>
+  </div>  
+  <script>
+  var setScroll = 0;
+  function showTop(clicked) {
+   if (clicked == undefined) clicked = 0;
+   let toTop = document.getElementById("toTop");
+   if (clicked == 1) toTop.style.display = "inline-block";
+   if (setScroll == 0) {
+    setScroll = 1;
+    document.addEventListener('scroll', function() {
+     if (document.documentElement.scrollTop > 500) {      
+      toTop.style.display = 'inline-block';
+     } else {
+      toTop.style.display = 'none';
+     }
+    }); 
+   } 
+  }
+  function showLink(curTask) {
+    var curhref;
+    if (curTask == "b") { curhref = "https://curl.se/docs/"; } else { curhref = "javascript:void(0)"; }
+    var aBrokenLink = document.getElementsByTagName('a');
+    var theBrokenLink = [], theBrokenLinkIndex = 0;
+    for (i = 0; i < aBrokenLink.length; i++) {
+     if (aBrokenLink[i].href == curhref) {
+      theBrokenLink[theBrokenLinkIndex] = aBrokenLink[i];
+      theBrokenLinkIndex++;
+      aBrokenLink[i].style.background = 'yellow';
+      aBrokenLink[i].style.border = '1px solid black';
+      aBrokenLink[i].style.padding = '2px';
+     }
+    }
+    setTimeout(function() {
+     for (i in theBrokenLink) {
+      if (theBrokenLink[i].style.background == "yellow") theBrokenLink[i].style.background = "";
+     }
+    }, 800);    
+    setTimeout(function() {
+     for (i in theBrokenLink) {
+      theBrokenLink[i].style.border = '';
+      theBrokenLink[i].style.padding = '';     
+     }
+    }, 1500);  
+  }  
+  function searchOptions(txt) {
+   let optionMenu = document.getElementById("optionMenu");
+   let optionMenuLi = optionMenu.getElementsByTagName("li");
+   for (i = 0; i < optionMenuLi.length; i++) {
+    let curLI = optionMenuLi[i].innerText;
+    if (curLI.indexOf(txt) > -1) {
+     optionMenuLi[i].style.display = "";
+    } else {
+     optionMenuLi[i].style.display = "none";
+    }
+   }
+  }
+  function toggleSearchButton(showhide, onoff) {
+   let showItem = showhide.nextElementSibling;
+   let curData = onoff.dataset;
+   if (curData.onoff == 0) {
+    curData.onoff = 1;
+    showItem.style.display = "";    
+    onoff.style.background = "white";
+    onoff.style.color = "black";    
+    onoff.innerHTML = onoff.innerHTML.replace("Show", "Hide");
+   } else {
+    curData.onoff = 0;
+    showItem.style.display = "none";
+    onoff.style.background = "";
+    onoff.style.color = "";
+    onoff.innerHTML = onoff.innerHTML.replace("Hide", "Show");
+   }
+  }
+  function addOptionLinks() {
+   let optionMenu = document.getElementById("optionMenu");
+   let optionMenuLi = optionMenu.getElementsByTagName("li");
+   let fullOptionList = document.getElementById("fullOptionList");   
+   fullOptionList.style.display = "";
+   let i = 0;
+   while (i < 14) {
+    optionMenuLi[0].remove();
+    i++;
+   }
+   i = 0;
+   while (i < 4) {
+    optionMenu.children[0].remove();
+    i++;
+   }
+   optionMenuLi = fullOptionList.getElementsByTagName("li");
+   for (i = 0; i < optionMenuLi.length; i++) {
+    optionMenuLi[i].getElementsByTagName("a")[0].addEventListener("click", function() {
+     var hValue;      
+     if (this.innerHTML.indexOf(",") > -1 || this.innerHTML.indexOf("&lt;") > -1) {
+      if (this.innerHTML.indexOf(",") > -1 && this.innerHTML.indexOf("&lt;") > -1) { 
+       this.href = "#" + this.innerHTML.substr(0, this.innerHTML.indexOf(","));        
+      } else {
+       if (this.innerHTML.indexOf(",") > -1 && this.innerHTML.indexOf("&lt;") == -1) { this.href = "#" + this.innerHTML.substr(0, this.innerHTML.indexOf(",")); }       
+       else { this.href = "#" + this.innerHTML.substr(0,this.innerHTML.indexOf("&lt;")); }
+      }
+      hValue = this.href;      
+     } else {      
+      this.href = "#" + this.innerHTML;
+      hValue = this.href;      
+     }
+     let hasSpace = 1;
+     while (hasSpace == 1) {
+      if (hValue.indexOf(" ") > -1) {
+       hValue = hValue.replace(" ", "");
+      } else {
+       hasSpace = 0;
+      }
+     }         
+     if (hValue.indexOf("#-#") > -1 || hValue.indexOf("#-:") > -1) {
+      if (hValue.indexOf("#-#") > -1) { hValue = hValue.replace("#-#", "#--progress-bar"); } 
+      else { hValue = hValue.replace("#-:", "#--next"); }
+      this.href = hValue;
+     } else {
+      this.href = hValue;
+     }     
+    });
+   }
+  }
+  showTop();
+  addOptionLinks();
+  </script>
+ </body>
+</html>

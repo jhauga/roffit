@@ -25,6 +25,8 @@ install:
 
 test:
 	@perl roffit --bare < testpage.1 > testpage.dump
+	@./fixSpecialCharacters.sh
+	@./fixBrokenLinks.sh
 	@if cmp testpage.dump testpage.output; then \
 	  echo "SUCCESS"; \
 	else \
