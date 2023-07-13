@@ -108,7 +108,7 @@ sub showp {
 
 sub defaultcss {
     print $OutFH <<ENDOFCSS
-<STYLE type="text/css">
+<style type="text/css">
 pre {
   overflow: auto;
   margin: 0;
@@ -152,7 +152,7 @@ p.roffit {
  text-align: center;
  font-size: 80%;
 }
-</STYLE>
+</style>
 ENDOFCSS
     ;
 }
@@ -639,7 +639,7 @@ else {
 print $OutFH @conv;
 print $OutFH <<ROFFIT
 <p class="roffit">
- This HTML page was made with <a href="http://daniel.haxx.se/projects/roffit/">roffit</a>.
+ This HTML page was made with <a href="http://daniel.haxx.se/projects/roffit/">roffit</a>.</p> 
 ROFFIT
     ;
 
