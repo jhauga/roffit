@@ -25,7 +25,11 @@ install:
 
 test:
 	@perl roffit --bare < testpage.1 > testpage.dump
+	@# IMPORTANT - run this script before "fixBrokenLinks.sh"
+	@# Creates anchor/links for special character options.
 	@./fixSpecialCharacters.sh
+	@# Fix links that are broken by punctuation characters, and empty
+	@# protocols within punctuation characters.
 	@./fixBrokenLinks.sh
 	@if cmp testpage.dump testpage.output; then \
 	  echo "SUCCESS"; \

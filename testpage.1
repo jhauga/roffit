@@ -19,18 +19,39 @@ but ARFC 959 is a fake
 
 RFC3986 is URI syntax
 
+Full inline urls with http, https, or ftp protocols are converted to 
+html links. For example: 
+
+https://example.com, (https://example.com#anchor), "http://example.com/1.html".
+
+But when the url is in an example it is not converted into an html link..
+
+.nf
+   cmd -opt https://example.com 
+.fi  
+
+When the protocols are declared within puncutaions, but have no domain they 
+become a null html link. For example:
+
+("http://"), (https://), and "ftp://"; not
+http:// or https:// or ftp://
+
 Also, we must support \fIstyle staring on one line
 and ending on another
 that may\fP be multiple lines off.
+
 .SH OPTIONS
 .IP "--bare"
 The output HTML will not include any HTML, HEAD or BODY tags. Also not that
 when this is selected, there will be no inlined CSS but you will have to
 define the necessary classes yourself.
+
 .IP "--mumbo"
 Display version number and exit. Also see \fB--jumbo\fP. Word in bold.
+
 .IP "--jumbo"
 Cool option. See \fI--mumbo\fP. Word in italic.
+
 .IP \-\-mandir=<dir>
 Set a directory in which \fIroffit\fP will check for other man pages (in nroff
 [name].[num] format) that this one refers to. If found, a <a href> link will
@@ -41,9 +62,15 @@ name in the generated link will be prefixed by the dir given with
 This works for references specified as \fImanpage(3)\fP (within the emhpasis
 foformatting) and in a plain \.BR section (often used in the SEE ALSO
 section).
+
 .IP \-\-hrefdir=<dir>
 Specify a directory to prefix generated href links created with the \-\-mandir
 option. This defaults to ".".
+
+.IP "-?, --special-char"
+Options with special characters will be included in anchors.
+Such as this option with special character \fI\-?, \-\-special\-char\fP.
+
 .SH "CSS CLASSES"
 .IP h2.nroffsh
 The nroff ".SH" section. These are normally the "headlines" before each sub
