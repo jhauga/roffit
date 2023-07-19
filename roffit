@@ -41,7 +41,6 @@ my $indentlevel=0; # logical levels, not columns
 my @p;
 my $within_tp;
 my $standalone=1; # by default we make stand-alone HTML pages
-my $fixingchar=0; # by default does not fix special charactacter options
 my $pre;
 my %anchor; # hash with all anchors
 
@@ -78,17 +77,10 @@ while($ARGV[0]) {
         $hrefdir=$1;
         shift @ARGV;
     }
-    if($ARGV[0] eq "--fix-char") {
-        # fix anchors/anchor links form manpage with special character options
-        $fixingchar=1;
-        shift @ARGV;
-    }	
     elsif($ARGV[0] =~ /^(--help|-h)/) {
         print $debugFH "Usage: roffit [options] [infile] < infile > outfile\n",
             "Options:\n",
             " --bare          do not put in HTML, HEAD, BODY tags\n",
-			" --fix-char      fix anchor and anchor links for options that use\n",
-			"                 special characters\n",
             " --hrefdir=<dir> if a manpage is found in the --mandir, this is the\n",
             "                 dir we prefix the HTML file name with in the output\n",
             " --mandir=<dir>  check for other HTMLized man pages in these dirs\n",
@@ -264,6 +256,33 @@ sub linkfile {
             # convert https://, http:// and ftp:// URLs to <a href> links
             $field =~ s/(^|\W)((https|http|ftp):\/\/[a-z0-9\-._~%:\/?\#\[\]\@!\$&'()*+,;=]+)/$1<a href=\"$2\">$2<\/a>/gi;
 
+            # remove punctuation characters at end of url
+            $field =~ s/(href=\")([^\"]*)(&quot;)/$1$2/g;
+            $field =~ s/(href=\"(http:\/\/|https:\/\/|ftp:\/\/)\")*([,.;()*])*(\">)/$1$4/g;
+
+            # null empty protocols
+            $field =~ s/href=\"(http:\/\/|https:\/\/|ftp:\/\/)\"/href=\"javascript:void(0)\"/g;
+
+            # add anchor and anchor links to special character options
+            my $specialcharacters = "`~!@\$%^*()-_=+{};:\'\\|,.?";
+            $field =~ s/(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)([$specialcharacters]|[\[\]])(,|<\/span>)/$1\"-$4\"$2$3$4/g;
+            $field =~ s/(<a class=\"emphasis\") href=\"#-\">-([$specialcharacters]|[\[\]])(,|<\/a>)/$1 href=\"#-$2\">-$2/g;
+
+            # add anchor to html entities
+            my $htmlentity = "(&#35;)|(&amp;)|(&#39;)|(&lt;)|(&gt;)";
+            if ($field =~ /(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)($htmlentity)(,|<\/span>)/) {
+                $field =~ s/(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)($htmlentity)(,|<\/span>)/$1\"-$4\"$2$3$4/g;
+                $field =~ s/&#35;/hash/ | $field =~ s/&amp;/ampersand/ | $field =~ s/&#39;/single-quote/ |
+                $field =~ s/&lt;/less-than/ | $field =~ s/&gt;/greater-than/;
+            }
+
+            # add anchor links to html entities
+            if ($field =~ /<span (Class=\"emphasis\")>-($htmlentity)(,|<\/span>)/) {
+                $field =~ s/<span (Class=\"emphasis\")>-($htmlentity)(,|<\/span>)/<a $1 href=\"#-$2\">-$2/gi;
+                $field =~ s/&#35;/hash/ | $field =~ s/&amp;/ampersand/ | $field =~ s/&#39;/single-quote/ |
+                $field =~ s/&lt;/less-than/ | $field =~ s/&gt;/greater-than/ | $field =~ s/<\/span>/<\/a>/;
+			}
+
             # convert (uppercase only) "RFC [number]" to a link
             $field =~ s/(^|\W)RFC ?(\d+)/$1<a href=\"http:\/\/www.ietf.org\/rfc\/rfc$2.txt\">RFC $2<\/a>/g;
 
@@ -321,7 +340,7 @@ sub parsefile {
         my $in = $_;
         my $out;
 
-  #     print $debugFH "DEBUG IN: $_";
+        # print $debugFH "DEBUG IN: $_";
 
         $in =~ s/[\r\n]//g if(!$pre); # tear off newlines
 
@@ -479,7 +498,7 @@ sub parsefile {
                 $anchor{$name}=1;
 
                 $rest =~ s/\"//g; # cut off quotes
-		$rest =~ s/\\f[IBPR]//g; # Un-format it (Use CSS on nroffip class instead)
+                $rest =~ s/\\f[IBPR]//g; # Un-format it (Use CSS on nroffip class instead)
                 $rest = do_encode($rest);
                 
                 $indentlevel-- if ($indentlevel);
@@ -568,8 +587,8 @@ sub parsefile {
             my $txt = $in;
 
             $txt =~ s/\\&//g;
-	    # Must come after previous substitution or it could munge some entities.
-	    $txt = do_encode($txt);
+            # Must come after previous substitution or it could munge some entities.
+            $txt = do_encode($txt);
             $txt =~ s/\\-/-/g;
             $txt =~ s/\\ /&nbsp\;/g;
             $txt =~ s/\\(?:'|&#39;)/&acute\;/g;
@@ -607,10 +626,10 @@ sub parsefile {
 
         if($out) {
             push @out, $out;
-   #         print $debugFH "DEBUG OUT: $out\n";
+            # print $debugFH "DEBUG OUT: $out\n";
         }
         else {
-   #         print $debugFH "DEBUG OUT: [withheld]\n";
+            # print $debugFH "DEBUG OUT: [withheld]\n";
         }
     }
     showp(@p);
@@ -624,146 +643,6 @@ if($filename) {
 parsefile($filename);
 
 my @conv = linkfile();
-
-# Not elegant but a solution to punctuated links and urls.
-
-# Create temp file and print generated contents to it
-# so that supporting scripts can correct minor issues.
-# Name with unlikely value as to not overwrite.
-my $_tempFile = "_F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt"; # store name in variable
-sub tempfile {
-  open FILE, ">", $_tempFile or die $!;
-  print FILE @conv;
-  close FILE;	
-}
-
-# Fix anchors and anchor links for options with special characters.
-sub fixspecialcharacters {
-  # text for bash script
-  my $fixSpecialCharacters = '#!/bin/bash
-  
-  # This is a supporting script that runs after the html is
-  # generated. It creates links for options with special characters.
-  
-  # Set to 1 if special characters and 0 if none.
-  _hasOptWithSpecialChar=1
-  
-  # Excludes the characters -> - \ "
-  _defaultSpecialChar=(
-  "-\`" "-backtick" "-\~" "-tilde" "-\!" "-explamation-mark" 
-  "-\@" "-aperand" "-\&\#35;" "-hash" \'-\$\' "-dollar-sign" 
-  "-\%" "-percent-sign" "-^" "-caret" "-\&amp;" "-ampersand" 
-  "-\*" "-asterisk" "-(" "-open-parenthesis" "-)" "-close-parenthesis" 
-  "-_" "-underscore" "-=" "-equal-sign" "-+" "-plus-sign" 
-  "-\[" "-open-bracket" "-\]" "-close-bracket" "-{" "-open-curly" 
-  "-}" "-close-curly" "-\;" "-semicolon" "-\:" "-colon" 
-  "-\&\#39;" "-single-quote" "-\|" "-vertical-bar" "-\&lt;" "-less-than" 
-  "-\&gt;" "-greater-than" "-," "-comma" "-\." "-period" "-\/" "-slash" 
-  "-?" "-question-mark")
-  
-  if [ $_hasOptWithSpecialChar -eq 1 ]
-  then
-    _length=${#_defaultSpecialChar[@]}
-    for ((i = 0; i<_length; i+=2))
-    do
-      _curElement=${_defaultSpecialChar[i]} # Options are even index
-      _replaceWith=${_defaultSpecialChar[i+1]} # Anchor/link value are odd index
-  	
-  	# Add anchor to name attribute
-      sed -i "s|<a name=\"-\"></a><span class=\"nroffip\">$_curElement|<a name=\"$_replaceWith\"></a><span class=\"nroffip\">$_curElement|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt
-  	
-  	# Add anchor link to href attribute
-      sed -i "s|<a class=\"emphasis\" href=\"#-\">$_curElement|<a class=\"emphasis\" href=\"#$_replaceWith\">$_curElement|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt
-    done
-  fi
-  
-  # Fix special character converted to html entities in roffit, which are #, <, >, &, \' but excluding ".
-  sed -i -E "s|<span Class=\"emphasis\">-\&\#35;([^.]*)</span>|<a class=\"emphasis\" href=\"#-hash\">-\&#35; \1</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt           # -#
-  sed -i -E "s|<span Class=\"emphasis\">-\&lt;([^.]*)</span>|<a class=\"emphasis\" href=\"#-less-than\">-\&lt; \1</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt         # -<
-  sed -i -E "s|<span Class=\"emphasis\">-\&gt;([^.]*)</span>|<a class=\"emphasis\" href=\"#-greater-than\">-\&gt; \1</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt      # ->
-  sed -i -E "s|<span Class=\"emphasis\">-\&amp;([^.]*)</span>|<a class=\"emphasis\" href=\"#-ampersand\">-\&amp; \1</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt       # -&
-  sed -i -E "s|<span Class=\"emphasis\">-\&\#39;([^.]*)</span>|<a class=\"emphasis\" href=\"#-single-quote\">-\&\#39; \1</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt  # -\'
-  ';
-  # make and print to temp script
-  # Name with unlikely value as to not overwrite.
-  open FILE, ">", "_temp_70ACA558CD37_script_8E23_replace_4E18_special_F6C4_char_F4ABAC4C.sh" or die $!;
-  print FILE $fixSpecialCharacters;
-  close FILE;
-  
-  # run and delete
-  `./_temp_70ACA558CD37_script_8E23_replace_4E18_special_F6C4_char_F4ABAC4C.sh`;
-  `rm _temp_70ACA558CD37_script_8E23_replace_4E18_special_F6C4_char_F4ABAC4C.sh`;
-}
-
-# Fix inline urls between punctuation characters.
-sub fixbrokenlinks {
-  # text for bash script
-  my $fixBrokenLinks = '#!/bin/bash
-  
-  # This is a supporting script that runs after the html is
-  # generated. It fixes links followed by punctuations and
-  # changes empty protocols to null links.
-  
-  # Fix links where quoted.
-  _lineNumber=$(grep -n "&quot;\<a " _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt | cut -d ":" -f 1)
-  sed -i -E "${_lineNumber}s|(href=\")([^\"]*)(&quot;)|\1\2|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt
-  
-  # Fix links followed by punctuations.
-  sed -i -E "s|(href=\"[^\"]*)([[:punct:]]+)(\">)([^\"]+)&quot;([[:punct:]]*)(</a>)|\1\3\4\6\"\5|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt
-  sed -i -E "s|(href=\"[^\"]*)([[:punct:]]+)(\">)([^\"]*)([[:punct:]]*)(</a>)|\1\3\4\6\5|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt
-  # when (https://page.com),
-  sed -i -E "s|(href=\"[^\"]*)([[:punct:]]+)(\">)([^\"]*)([[:punct:]]*)(</a>)|\1\3\4\6\5|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt
-  
-  # Fix incomplete http://, https://, and ftp://
-  # http
-  _lineNumberhttp=$(grep -n \'href="http://"\' _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt | cut -d ":" -f 1)
-  sed -i -E "${_lineNumberhttp}s|href=\"http://\">(http://)(\))([[:punct:]])(</a>)|href=\"javascript:void(0)\">\1\4\2\3|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. (http://),
-  sed -i -E "${_lineNumberhttp}s|href=\"http://\)\">(http://)(\))([[:punct:]])(</a>)|href=\"javascript:void(0)\">\1\4\2\3|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. (http://) 
-  sed -i "s|href=\"http://\"|href=\"javascript:void(0)\"|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. http://,
-  sed -i "s|<a href=\"http:\">http://</a>|<a href=\"javascript:void(0)\">http://</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. ("http://")
-  sed -i "s|<a href=\"http:/\">http://</a>|<a href=\"javascript:void(0)\">http://</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. "http://",
-  # https
-  _lineNumberhttp=$(grep -n \'href="https://"\' _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt | cut -d ":" -f 1)
-  sed -i -E "${_lineNumberhttp}s|href=\"https://\">(https://)(\))(</a>)|href=\"javascript:void(0)\">\1\3\2|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. (https://),
-  sed -i -E "${_lineNumberhttp}s|href=\"https://\)\">(https://)(\))([[:punct:]])(</a>)|href=\"javascript:void(0)\">\1\4\2\3|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. (https://)
-  sed -i "s|href=\"https://\"|href=\"javascript:void(0)\"|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. https://,
-  sed -i "s|<a href=\"https:\">https://</a>|<a href=\"javascript:void(0)\">https://</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. ("https://")
-  sed -i "s|<a href=\"https:/\">https://</a>|<a href=\"javascript:void(0)\">https://</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. "https://",
-  # ftp
-  _lineNumberftp=$(grep -n \'href="ftp://"\' _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt | cut -d ":" -f 1)
-  sed -i -E "${_lineNumberhttp}s|href=\"ftp://\">(ftp://)(\))(</a>)|href=\"javascript:void(0)\">\1\3\2|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. (ftp://),
-  sed -i -E "${_lineNumberhttp}s|href=\"ftp://\)\">(ftp://)(\))([[:punct:]])(</a>)|href=\"javascript:void(0)\">\1\4\2\3|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. (ftp://)
-  sed -i "s|href=\"ftp://\"|href=\"javascript:void(0)\"|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. ftp://,
-  sed -i "s|<a href=\"ftp:\">ftp://</a>|<a href=\"javascript:void(0)\">ftp://</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. ("ftp://")
-  sed -i "s|<a href=\"ftp:/\">ftp://</a>|<a href=\"javascript:void(0)\">ftp://</a>|g" _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt # e.g. ftp://
-  ';
-  
-  # make and print to temp script
-  # Name with unlikely value as to not overwrite.
-  open FILE, ">", "_temp_F6C4_script_4E18_fix_8E23_broken_{F4ABAC4C_links_70ACA558CD37.sh" or die $!;
-  print FILE $fixBrokenLinks;
-  close FILE;
-  
-  # run and delete
-  `./_temp_F6C4_script_4E18_fix_8E23_broken_{F4ABAC4C_links_70ACA558CD37.sh`;
-  `rm _temp_F6C4_script_4E18_fix_8E23_broken_{F4ABAC4C_links_70ACA558CD37.sh`;
-}
-
-# Output the contents from temp file to terminal.
-sub outputtoterminal {
-  # open temp file and output to terminal
-  open (my $fh, "<:encoding(UTF-8)", $_tempFile)
-    or die "Error opening file '$_tempFile' $!";
-  while (my $row = <$fh>) {
-    chomp $row;  
-	#print $OutFH @conv;
-    print $OutFH "$row\n";	
-  }
-  close FILE;
-  
-  # delete temp file
-  `rm _F4ABAC4C_roffit_4E18_temp_8E23_file_70ACA558CD37.txt`;		
-}
 
 my $title=sprintf("%s man page",
                   $manpage{'name'}?$manpage{'name'}:"secret");
@@ -784,24 +663,10 @@ else {
     print "<!-- generated with roffit -->\n";
 }
 
-if($fixingchar) {
-  tempfile(); # make and print to temp file
-  
-  fixspecialcharacters(); # fix options w/ special characters
-  fixbrokenlinks(); # fix links followed by punctuation characters
-
-  outputtoterminal(); # output edited content
-} else {
-  tempfile(); # make and print to temp file
-
-  fixbrokenlinks(); # fix links followed by punctuation characters
-
-  outputtoterminal(); # output edited content
-}
-
+print $OutFH @conv;
 print $OutFH <<ROFFIT
 <p class="roffit">
- This HTML page was made with <a href="http://daniel.haxx.se/projects/roffit/">roffit</a>.</p> 
+ This HTML page was made with <a href="http://daniel.haxx.se/projects/roffit/">roffit</a>.</p>
 ROFFIT
     ;
 
