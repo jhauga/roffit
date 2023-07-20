@@ -30,11 +30,19 @@ But when the url is in an example it is not converted into an html link..
    cmd -opt https://example.com 
 .fi  
 
-When the protocols are declared within puncutaions, but have no domain they 
-become a null html link. For example:
+When the protocols are declared within punctuations, but have no domain they remain
+as an <a> element with the href attribute removed. For example:
 
-("http://"), (https://), and "ftp://"; not
-http:// or https:// or ftp://
+("http://"), (https://), and "ftp://"; are <a> elements, while unpunctuated
+http:// or https:// or ftp:// are inline text within <p> element.
+
+Additionally special character options will have anchor links.
+So if an option similar to the one below is documented;
+it will have an anchor and anchor link:
+
+.IP "-?, --special-char"
+Options with special characters will be included in anchors.
+Such as this option with special character \fI\-?, \-\-special\-char\fP.
 
 Also, we must support \fIstyle staring on one line
 and ending on another
@@ -67,10 +75,6 @@ section).
 Specify a directory to prefix generated href links created with the \-\-mandir
 option. This defaults to ".".
 
-.IP "-?, --special-char"
-Options with special characters will be included in anchors.
-Such as this option with special character \fI\-?, \-\-special\-char\fP.
-
 .SH "CSS CLASSES"
 .IP h2.nroffsh
 The nroff ".SH" section. These are normally the "headlines" before each sub
@@ -94,4 +98,4 @@ Text marked to be emphasized.
 .IP p.roffit
 Used for advertising final paragraph.
 .SH WWW
- http://daniel.haxx.se/projects/roffit
+http://daniel.haxx.se/projects/roffit
