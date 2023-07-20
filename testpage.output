@@ -7,14 +7,17 @@
 <p class="level0">but ARFC 959 is a fake </p>
 <p class="level0"><a href="http://www.ietf.org/rfc/rfc3986.txt">RFC 3986</a> is URI syntax </p>
 <p class="level0">Full inline urls with http, https, or ftp protocols are converted to  html links. For example:  </p>
-<p class="level0"><a href="https://curl.se/">https://curl.se/,</a> (&quot;<a href="https://curl.se/docs">https://curl.se/docs&quot;),</a> (<a href="https://daniel.haxx.se/projects/roffit/">https://daniel.haxx.se/projects/roffit/).</a> </p>
+<p class="level0"><a href="https://curl.se/">https://curl.se/</a>, (&quot;<a href="https://curl.se/docs">https://curl.se/docs</a>&quot;), (<a href="https://daniel.haxx.se/projects/roffit/">https://daniel.haxx.se/projects/roffit/</a>). </p>
 <p class="level0">But when the url is in an example it is not converted into an html link.. </p><pre class="level0">
 &nbsp;  cmd -opt https://example.com 
 </pre>
 
-<p class="level0">When the protocols are declared within puncutaions, but have no domain they  become a null html link. For example: </p>
-<p class="level0">(&quot;<a href="javascript:void(0)">http://&quot;),</a> (<a href="javascript:void(0)">https://),</a> and &quot;<a href="javascript:void(0)">ftp://&quot;;</a> not http:// or https:// or ftp:// </p>
-<p class="level0">Also, we must support <span class="emphasis">style staring on one line and ending on another that may</span> be multiple lines off. </p><a name="OPTIONS"></a><h2 class="nroffsh">Options</h2>
+<p class="level0">When the protocols are declared within punctuations, but have no domain they remain as an &lt;a&gt; element with the href attribute removed. For example: </p>
+<p class="level0">(&quot;<a>http://</a>&quot;), (<a>https://</a>), and &quot;<a>ftp://</a>&quot;; are &lt;a&gt; elements, while unpunctuated http:// or https:// or ftp:// are inline text within &lt;p&gt; element. </p>
+<p class="level0">Additionally special character options will have anchor links. So if an option similar to the one below is documented; it will have an anchor and anchor link: </p>
+<p class="level0"><a name="-?"></a><span class="nroffip">-? --special-char</span> </p>
+<p class="level1">Options with special characters will be included in anchors. Such as this option with special character <a class="emphasis" href="#-?">-? --special-char</a>. </p>
+<p class="level1">Also, we must support <span class="emphasis">style staring on one line and ending on another that may</span> be multiple lines off. </p><a name="OPTIONS"></a><h2 class="nroffsh">Options</h2>
 <p class="level0"><a name="--bare"></a><span class="nroffip">--bare</span> </p>
 <p class="level1">The output HTML will not include any HTML, HEAD or BODY tags. Also note that when this is selected, there will be no inlined CSS but you will have to define the necessary classes yourself. </p>
 <p class="level0"><a name="--mumbo"></a><span class="nroffip">--mumbo</span> </p>
@@ -25,9 +28,7 @@
 <p class="level1">Set a directory in which <span Class="emphasis">roffit</span> will check for other man pages (in nroff [name].[num] format) that this one refers to. If found, a &lt;a href&gt; link will be made to that page with a html extension instead of the number. The file name in the generated link will be prefixed by the dir given with <span Class="emphasis">--hrefdir</span>. </p>
 <p class="level1">This works for references specified as <span Class="emphasis">manpage(3)</span> (within the emhpasis foformatting) and in a plain .BR section (often used in the SEE ALSO section). </p>
 <p class="level0"><a name="--hrefdirdir"></a><span class="nroffip">--hrefdir=&lt;dir&gt;</span> </p>
-<p class="level1">Specify a directory to prefix generated href links created with the --mandir option. This defaults to &quot;.&quot;. </p>
-<p class="level0"><a name="-?"></a><span class="nroffip">-? --special-char</span> </p>
-<p class="level1">Options with special characters will be included in anchors. Such as this option with special character <a class="emphasis" href="#-?">-? --special-char</a>. </p><a name="CSS"></a><h2 class="nroffsh">Css classes</h2>
+<p class="level1">Specify a directory to prefix generated href links created with the --mandir option. This defaults to &quot;.&quot;. </p><a name="CSS"></a><h2 class="nroffsh">Css classes</h2>
 <p class="level0"><a name="h2nroffsh"></a><span class="nroffip">h2.nroffsh</span> </p>
 <p class="level1">The nroff &quot;.SH&quot; section. These are normally the &quot;headlines&quot; before each sub section within the man page. </p>
 <p class="level0"><a name="pnroffip"></a><span class="nroffip">p.nroffip</span> </p>
@@ -46,5 +47,5 @@
 <p class="level1">Text marked to be emphasized. </p>
 <p class="level0"><a name="proffit"></a><span class="nroffip">p.roffit</span> </p>
 <p class="level1">Used for advertising final paragraph. </p><a name="WWW"></a><h2 class="nroffsh">Www</h2>
-<p class="level0">&nbsp;<a href="http://daniel.haxx.se/projects/roffit">http://daniel.haxx.se/projects/roffit</a> </p><p class="roffit">
- This HTML page was made with <a href="http://daniel.haxx.se/projects/roffit/">roffit</a>.</p>
+<p class="level0"><a href="http://daniel.haxx.se/projects/roffit">http://daniel.haxx.se/projects/roffit</a> </p><p class="roffit">
+ This HTML page was made with <a href="http://daniel.haxx.se/projects/roffit/">roffit</a>.
