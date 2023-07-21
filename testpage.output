@@ -15,8 +15,8 @@
 <p class="level0">When the protocols are declared within punctuations, but have no domain they remain as an &lt;a&gt; element with the href attribute removed. For example: </p>
 <p class="level0">(&quot;<a>http://</a>&quot;), (<a>https://</a>), and &quot;<a>ftp://</a>&quot;; are &lt;a&gt; elements, while unpunctuated http:// or https:// or ftp:// are inline text within &lt;p&gt; element. </p>
 <p class="level0">Additionally special character options will have anchor links. So if an option similar to the one below is documented; it will have an anchor and anchor link: </p>
-<p class="level0"><a name="-?"></a><span class="nroffip">-? --special-char</span> </p>
-<p class="level1">Options with special characters will be included in anchors. Such as this option with special character <a class="emphasis" href="#-?">-? --special-char</a>. </p>
+<p class="level0"><a name="-?"></a><span class="nroffip">-?, --special-char</span> </p>
+<p class="level1">Options with special characters will be included in anchors. Such as this option with special character <a class="emphasis" href="#-?">-?, --special-char</a>. </p>
 <p class="level1">Also, we must support <span class="emphasis">style staring on one line and ending on another that may</span> be multiple lines off. </p><a name="OPTIONS"></a><h2 class="nroffsh">Options</h2>
 <p class="level0"><a name="--bare"></a><span class="nroffip">--bare</span> </p>
 <p class="level1">The output HTML will not include any HTML, HEAD or BODY tags. Also note that when this is selected, there will be no inlined CSS but you will have to define the necessary classes yourself. </p>
