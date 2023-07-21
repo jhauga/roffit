@@ -269,7 +269,7 @@ sub linkfile {
             # convert https://, http:// and ftp:// URLs to <a href> links first with all characters intact
             $field =~ s/(^|\W)((https|http|ftp):\/\/[a-z0-9\-._~%:\/?\#\[\]\@!\$&'()*+,;=]+)/$1<a href=\"$2\">$2<\/a>/gi;
 
-            # start process - remove sloppy punctuation characters at end of url			
+            # start process - remove syntax punctuation from href url
             $field =~ s/(href=\")([^\"]*)(&quot;)/$1$2/g; # remove &quot; trouble maker first
             $field =~ s/(href=\"(http:\/\/|https:\/\/|ftp:\/\/)\")*([,.;()*])*(\">)/$1$4/g; # remove href punctuation
             $field =~ s/((&quot;)+|(&quot;[,.;()]+)|([,.;()]+)+)<\/a>/<\/a>$1/g; # inline punctuations out of <a>URL</a>            
