@@ -171,8 +171,6 @@ sub text2name {
 sub field_anchor {
     $field =~ s/(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)($htmlentity)/$1\"-$4\"$2$3$4/g;
     $field =~ s/<span (Class=\"emphasis\")>-($htmlentity)/<a $1 href=\"#-$2\">-$2/gi;
-    $field =~ s/&#35;/hash/ | $field =~ s/&amp;/ampersand/ | $field =~ s/&#39;/single-quote/ |
-    $field =~ s/&lt;/less-than/ | $field =~ s/&gt;/greater-than/;    
 }
 
 # scan through the file and check for <span> sections we should convert
