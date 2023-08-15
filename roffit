@@ -51,6 +51,7 @@ my $filename;
 my $leavecase;
 
 my $htmlentity = "(&lt;)|(&gt;)|(&amp;)|(&#39;)|(&#35;)"; # html entities by do_encode
+my $specialcharacters = "`~!@\$%^*()-_=+{};:\'\\|,.?"; # define options for special character
 my $field; # defined for global use
 
 while($ARGV[0]) {
@@ -167,10 +168,71 @@ sub text2name {
     return $text;
 }
 
-# fixes special character anchors/anchor links while keeping text anchor/anchor links intact
-sub field_anchor {
-    $field =~ s/(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)($htmlentity)/$1\"-$4\"$2$3$4/g;
-    $field =~ s/<span (Class=\"emphasis\")>-($htmlentity)/<a $1 href=\"#-$2\">-$2/gi;
+# Converts http, https, and ftp inline text to links.
+sub convert_html_links {
+  if ($field =~ /(^|\W)((https|http|ftp):\/\/[a-z0-9\-._~%:\/?\#\[\]\@!\$&'()*+,;=]+)/) {
+    # convert https://, http:// and ftp:// URLs to <a href> links first with all characters intact
+    $field =~ s/(^|\W)((https|http|ftp):\/\/[a-z0-9\-._~%:\/?\#\[\]\@!\$&'()*+,;=]+)/$1<a href=\"$2\">$2<\/a>/gi;
+
+    # individual conditions to reduce run time
+	if (
+     $field =~ /(href=\")([^\"]*)(&quot;)/ || # 1
+     $field =~ /(href=\"(http:\/\/|https:\/\/|ftp:\/\/)\")*([,.;()*])*(\">)/ || # 2
+     $field =~ /((&quot;)+|(&quot;[,.;()]+)|([,.;()]+)+)<\/a>/ || # 3
+     $field =~ /<a href=\"(http:\/\/|https:\/\/|ftp:\/\/)\">/ # 4
+	) {
+      # remove &quot; trouble maker first
+      if ($field =~ /(href=\")([^\"]*)(&quot;)/) { # 1
+        $field =~ s/(href=\")([^\"]*)(&quot;)/$1$2/g; 
+      }
+      # remove href punctuation
+      if ($field =~ /(href=\"(http:\/\/|https:\/\/|ftp:\/\/)\")*([,.;()*])*(\">)/) { # 2
+        $field =~ s/(href=\"(http:\/\/|https:\/\/|ftp:\/\/)\")*([,.;()*])*(\">)/$1$4/g;
+      }
+      # inline punctuations out of <a>URL</a>
+      if ($field =~ /((&quot;)+|(&quot;[,.;()]+)|([,.;()]+)+)<\/a>/) { # 3
+        $field =~ s/((&quot;)+|(&quot;[,.;()]+)|([,.;()]+)+)<\/a>/<\/a>$1/g; 
+  	}
+      # remove href from empty protocols
+      if ($field =~ /<a href=\"(http:\/\/|https:\/\/|ftp:\/\/)\">/) { # 4
+        $field =~ s/<a href=\"(http:\/\/|https:\/\/|ftp:\/\/)\">/<a>/g;
+      }
+    }
+  }
+  if ($field =~ /(^|\W)RFC ?(\d+)/) {
+    # convert (uppercase only) "RFC [number]" to a link
+    $field =~ s/(^|\W)RFC ?(\d+)/$1<a href=\"http:\/\/www.ietf.org\/rfc\/rfc$2.txt\">RFC $2<\/a>/g;
+  }
+}
+
+# Fix optiions anchors and anchor links with special characters.
+sub fix_special_characters {
+  # start process to fix options with special characters
+  # non html entities first
+  if ($field =~ /(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)([$specialcharacters]|[\[\]])((,)|(<\/span>))/) {
+    $field =~ s/(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)([$specialcharacters]|[\[\]])((,)|(<\/span>))/$1\"-$4\"$2$3$4$5/g;
+  }
+  if ($field =~ /(<a class=\"emphasis\") href=\"#-\">-([$specialcharacters]|[\[\]])((,)|(<\/a>))/) {
+    $field =~ s/(<a class=\"emphasis\") href=\"#-\">-([$specialcharacters]|[\[\]])((,)|(<\/a>))/$1 href=\"#-$2\">-$2$4/g;
+  }
+
+  # fix html entities
+  # add anchors when conditions is met as few to no matches expected
+  if (
+   $field =~ /(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)($htmlentity)(,|<\/span>)/ ||
+   $field =~ /<span (Class=\"emphasis\")>-($htmlentity)(,|<\/span>)/
+   ) {
+    if ($field =~ /(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)($htmlentity)(,|<\/span>)/) {
+      $field =~ s/(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)($htmlentity)/$1\"-$4\"$2$3$4/g;
+	} 
+    if ($field =~ /<span (Class=\"emphasis\")>-($htmlentity)/) {
+      $field =~ s/<span (Class=\"emphasis\")>-($htmlentity)/<a $1 href=\"#-$2\">-$2/g;
+      if ($field =~ /<\/span>/) {
+        # add anchor links to html entities without removing current anchor links    
+        $field =~ s/<\/span>/<\/a>/; # close as link
+      }
+	}
+  }
 }
 
 # scan through the file and check for <span> sections we should convert
@@ -261,34 +323,22 @@ sub linkfile {
                 $field =~ s/\[\]/$link/;
             }
 
-            # convert https://, http:// and ftp:// URLs to <a href> links first with all characters intact
-            $field =~ s/(^|\W)((https|http|ftp):\/\/[a-z0-9\-._~%:\/?\#\[\]\@!\$&'()*+,;=]+)/$1<a href=\"$2\">$2<\/a>/gi;
-
-            # start process - remove syntax punctuation from href url
-            $field =~ s/(href=\")([^\"]*)(&quot;)/$1$2/g; # remove &quot; trouble maker first
-            $field =~ s/(href=\"(http:\/\/|https:\/\/|ftp:\/\/)\")*([,.;()*])*(\">)/$1$4/g; # remove href punctuation
-            $field =~ s/((&quot;)+|(&quot;[,.;()]+)|([,.;()]+)+)<\/a>/<\/a>$1/g; # inline punctuations out of <a>URL</a>            
-            $field =~ s/<a href=\"(http:\/\/|https:\/\/|ftp:\/\/)\">/<a>/g; # remove href from empty protocols
-
-            my $specialcharacters = "`~!@\$%^*()-_=+{};:\'\\|,.?"; # define options for special character
-            # start process to fix options with special characters
-            # non html entities first
-            $field =~ s/(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)([$specialcharacters]|[\[\]])((,)|(<\/span>))/$1\"-$4\"$2$3$4$5/g;
-            $field =~ s/(<a class=\"emphasis\") href=\"#-\">-([$specialcharacters]|[\[\]])((,)|(<\/a>))/$1 href=\"#-$2\">-$2$4/g;
-
-            # fix html entities
-            # add anchors when conditions is met as few to no matches expected
-            if ( $field =~ /(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)($htmlentity)(,|<\/span>)/ ) {
-                field_anchor(); # does not remove or alter current option anchor links
+            # converts https://, http:// and ftp:// URLs to <a href> links first with all characters intact
+			# converts (uppercase only) "RFC [number]" to a link            
+			if (
+             $field =~ /(^|\W)((https|http|ftp):\/\/[a-z0-9\-._~%:\/?\#\[\]\@!\$&'()*+,;=]+)/ ||
+             $field =~ /(^|\W)RFC ?(\d+)/
+             ) {
+			  convert_html_links(); # Run link conversion in subroutine to save time.
             }
-            # add anchor links to html entities without removing current anchor links
-            if ($field =~ /<span (Class=\"emphasis\")>-($htmlentity)(,|<\/span>)/) {
-                field_anchor(); # closing tag to </a>
-                $field =~ s/<\/span>/<\/a>/; # close as link
+            if ( # Fix special characters in subroutine to save time.
+             $field =~ /(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)([$specialcharacters]|[\[\]])((,)|(<\/span>))/ ||
+             $field =~ /(<a class=\"emphasis\") href=\"#-\">-([$specialcharacters]|[\[\]])((,)|(<\/a>))/ ||
+             $field =~ /(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)($htmlentity)(,|<\/span>)/ ||
+             $field =~ /<span (Class=\"emphasis\")>-($htmlentity)(,|<\/span>)/
+             ) {
+              fix_special_characters();
             }
-
-            # convert (uppercase only) "RFC [number]" to a link
-            $field =~ s/(^|\W)RFC ?(\d+)/$1<a href=\"http:\/\/www.ietf.org\/rfc\/rfc$2.txt\">RFC $2<\/a>/g;
 
             $processed .= $field . $tail;
         }
