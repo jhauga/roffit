@@ -19,47 +19,18 @@ but ARFC 959 is a fake
 
 RFC3986 is URI syntax
 
-Full inline urls with http, https, or ftp protocols are converted to 
-html links. For example: 
-
-https://curl.se/, ("https://curl.se/docs"), (https://daniel.haxx.se/projects/roffit/).
-
-But when the url is in an example it is not converted into an html link..
-
-.nf
-   cmd -opt https://example.com 
-.fi  
-
-When the protocols are declared within punctuations, but have no domain they remain
-as an <a> element with the href attribute removed. For example:
-
-("http://"), (https://), and "ftp://"; are <a> elements, while unpunctuated
-http:// or https:// or ftp:// are inline text within <p> element.
-
-Additionally special character options will have anchor links.
-So if an option similar to the one below is documented;
-it will have an anchor and anchor link:
-
-.IP "-?, --special-char"
-Options with special characters will be included in anchors.
-Such as this option with special character \fI\-?, \-\-special\-char\fP.
-
 Also, we must support \fIstyle staring on one line
 and ending on another
 that may\fP be multiple lines off.
-
 .SH OPTIONS
 .IP "--bare"
-The output HTML will not include any HTML, HEAD or BODY tags. Also note that
+The output HTML will not include any HTML, HEAD or BODY tags. Also not that
 when this is selected, there will be no inlined CSS but you will have to
 define the necessary classes yourself.
-
 .IP "--mumbo"
 Display version number and exit. Also see \fB--jumbo\fP. Word in bold.
-
 .IP "--jumbo"
 Cool option. See \fI--mumbo\fP. Word in italic.
-
 .IP \-\-mandir=<dir>
 Set a directory in which \fIroffit\fP will check for other man pages (in nroff
 [name].[num] format) that this one refers to. If found, a <a href> link will
@@ -70,11 +41,9 @@ name in the generated link will be prefixed by the dir given with
 This works for references specified as \fImanpage(3)\fP (within the emhpasis
 foformatting) and in a plain \.BR section (often used in the SEE ALSO
 section).
-
 .IP \-\-hrefdir=<dir>
 Specify a directory to prefix generated href links created with the \-\-mandir
 option. This defaults to ".".
-
 .SH "CSS CLASSES"
 .IP h2.nroffsh
 The nroff ".SH" section. These are normally the "headlines" before each sub
@@ -96,6 +65,6 @@ Text marked as a reference to another man page.
 .IP span.emphasis
 Text marked to be emphasized.
 .IP p.roffit
-Used for advertising final paragraph.
+Used for the advertising final paragraph.
 .SH WWW
 http://daniel.haxx.se/projects/roffit
