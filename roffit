@@ -329,7 +329,7 @@ sub linkfile {
              $field =~ /(^|\W)((https|http|ftp):\/\/[a-z0-9\-._~%:\/?\#\[\]\@!\$&'()*+,;=]+)/ ||
              $field =~ /(^|\W)RFC ?(\d+)/
              ) {
-			  convert_html_links(); # Run link conversion in subroutine to save time.
+              convert_html_links(); # Run link conversion in subroutine to save time.
             }
             if ( # Fix special characters in subroutine to save time.
              $field =~ /(<a name=)\"-\"(><\/a>)(<span class=\"nroffip\">-)([$specialcharacters]|[\[\]])((,)|(<\/span>))/ ||
